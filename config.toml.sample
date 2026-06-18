@@ -22,3 +22,16 @@ max_lifetime = "300s"
 
 # Optional space separated Postgres DSN params. eg: "application_name=listmonk gssencmode=disable"
 params = ""
+
+# Authentik proxy header authentication. When enabled, the app authenticates
+# users via X-authentik-* headers injected by an Authentik outpost/reverse proxy
+# sitting in front of the app. Configure via environment variables:
+#   LISTMONK_security__authentik__enabled=true
+#   LISTMONK_security__authentik__trusted_ips="10.0.0.0/8,127.0.0.1"
+#   LISTMONK_security__authentik__trusted_secret="shared-secret"
+#   LISTMONK_security__authentik__group_prefix="listmonk"
+# The app must NOT be directly reachable; only the outpost/proxy should reach it.
+# trusted_ips: comma-separated CIDRs/IPs of the proxy. Fail-closed if both
+# trusted_ips and trusted_secret are empty. group_prefix: Authentik groups
+# prefixed with this (e.g. "listmonk-admin") are mapped to app roles; users
+# without a prefixed group are denied.

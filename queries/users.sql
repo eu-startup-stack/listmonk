@@ -145,6 +145,12 @@ UPDATE users SET name=$2, email=(CASE WHEN password_login THEN $3 ELSE email END
     password=(CASE WHEN $4 = TRUE THEN (CASE WHEN $5 != '' THEN CRYPT($5, GEN_SALT('bf')) ELSE password END) ELSE NULL END)
     WHERE id=$1;
 
+-- name: update-user-role
+-- Updates only the user_role_id for a user. Used by the Authentik proxy auth
+-- path to sync the IdP group -> role mapping without touching any other field
+-- (avoids the password re-hash / superadmin guard in the generic update-user).
+UPDATE users SET user_role_id = $2, updated_at = NOW() WHERE id = $1;
+
 -- name: update-user-login
 UPDATE users SET loggedin_at=NOW(), avatar=(CASE WHEN $2 != '' THEN $2 ELSE avatar END) WHERE id=$1;
 

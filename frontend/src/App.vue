@@ -39,7 +39,7 @@
             </router-link>
           </b-navbar-item>
           <b-navbar-item href="#">
-            <a href="#" @click.prevent="doLogout"><b-icon icon="logout-variant" /> {{ $t('users.logout') }}</a>
+            <a v-if="!serverConfig.authentik_enabled" href="#" @click.prevent="doLogout"><b-icon icon="logout-variant" /> {{ $t('users.logout') }}</a>
           </b-navbar-item>
         </b-navbar-dropdown>
       </template>

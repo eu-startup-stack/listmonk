@@ -48,11 +48,23 @@ func initHTTPHandlers(e *echo.Echo, a *App) {
 		}))
 	}
 
+	// Build the auth middleware. When Authentik proxy auth is enabled, wrap it
+	// so Authentik header auth is tried first (falling through to normal
+	// token/session auth for non-proxy requests like API tokens).
+	var authMW echo.MiddlewareFunc = a.auth.Middleware
+	if a.authentik.Enabled() {
+		authMW = a.authentik.Middleware(a.auth.Middleware, a.cfg.Permissions, func() {
+			a.Lock()
+			a.needsUserSetup = false
+			a.Unlock()
+		})
+	}
+
 	// =================================================================
 	// Authenticated non /api handlers.
 	{
 		// Attach a middleware to the group that checks for auth.
-		g := e.Group("", a.auth.Middleware, func(next echo.HandlerFunc) echo.HandlerFunc {
+		g := e.Group("", authMW, func(next echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
 				u := c.Get(auth.UserHTTPCtxKey)
 
@@ -84,7 +96,7 @@ func initHTTPHandlers(e *echo.Echo, a *App) {
 			pm = a.auth.Perm
 
 			// Attach a middleware to the group that checks for auth.
-			g = e.Group("", a.auth.Middleware, func(next echo.HandlerFunc) echo.HandlerFunc {
+			g = e.Group("", authMW, func(next echo.HandlerFunc) echo.HandlerFunc {
 				return func(c echo.Context) error {
 					u := c.Get(auth.UserHTTPCtxKey)
 

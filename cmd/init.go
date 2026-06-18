@@ -113,6 +113,8 @@ type Config struct {
 			DefaultListRoleID int    `koanf:"default_list_role_id"`
 		} `koanf:"oidc"`
 
+		Authentik AuthentikConfig `koanf:"authentik"`
+
 		Captcha struct {
 			Altcha struct {
 				Enabled    bool `koanf:"enabled"`

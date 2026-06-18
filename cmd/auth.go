@@ -83,6 +83,13 @@ var (
 
 // LoginPage renders the login page and handles the login form.
 func (a *App) LoginPage(c echo.Context) error {
+	// When Authentik proxy auth is enabled, the proxy handles login. Redirect
+	// the browser straight to the admin SPA so a stray /admin/login visit
+	// doesn't show a native form the proxy will never let the user use.
+	if a.authentik.Enabled() {
+		return c.Redirect(http.StatusFound, uriAdmin)
+	}
+
 	// Has the user been setup?
 	a.Lock()
 	needsUserSetup := a.needsUserSetup
@@ -125,6 +132,12 @@ func (a *App) LoginSetupPage(c echo.Context) error {
 
 // TwofaPage renders the 2FA verification page and handles the 2FA form submission.
 func (a *App) TwofaPage(c echo.Context) error {
+	// When Authentik proxy auth is enabled there is no 2FA path; the proxy
+	// handles the IdP side. Redirect to the admin SPA.
+	if a.authentik.Enabled() {
+		return c.Redirect(http.StatusFound, uriAdmin)
+	}
+
 	var token, next string
 
 	if c.Request().Method == http.MethodPost {
@@ -166,9 +179,17 @@ func (a *App) TwofaPage(c echo.Context) error {
 
 // Logout logs a user out.
 func (a *App) Logout(c echo.Context) error {
+	// When Authentik proxy auth is enabled there is no local session to destroy;
+	// the proxy owns the session. Just return success.
+	if a.authentik.Enabled() {
+		return c.JSON(http.StatusOK, okResp{true})
+	}
+
 	// Delete the session from the DB and cookie.
-	sess := c.Get(auth.SessionKey).(*simplesessions.Session)
-	_ = sess.Destroy()
+	sess, ok := c.Get(auth.SessionKey).(*simplesessions.Session)
+	if ok && sess != nil {
+		_ = sess.Destroy()
+	}
 
 	return c.JSON(http.StatusOK, okResp{true})
 }
@@ -273,6 +294,12 @@ func (a *App) OIDCFinish(c echo.Context) error {
 
 // ForgotPage renders the forgot password page and handles the forgot password form.
 func (a *App) ForgotPage(c echo.Context) error {
+	// When Authentik proxy auth is enabled, the proxy handles login (and
+	// password reset on the IdP side). Redirect to the admin SPA.
+	if a.authentik.Enabled() {
+		return c.Redirect(http.StatusFound, uriAdmin)
+	}
+
 	// Process the forgot password request.
 	if c.Request().Method == http.MethodPost {
 		return a.doForgotPassword(c)
@@ -285,6 +312,12 @@ func (a *App) ForgotPage(c echo.Context) error {
 
 // ResetPage renders the reset password page and handles the reset password form.
 func (a *App) ResetPage(c echo.Context) error {
+	// When Authentik proxy auth is enabled, the proxy handles login (and
+	// password reset on the IdP side). Redirect to the admin SPA.
+	if a.authentik.Enabled() {
+		return c.Redirect(http.StatusFound, uriAdmin)
+	}
+
 	var (
 		token = strings.TrimSpace(c.QueryParam("token"))
 		email = strings.ToLower(strings.TrimSpace(c.QueryParam("email")))

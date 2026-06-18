@@ -113,6 +113,16 @@ func (c *Core) UpdateUserProfile(id int, u auth.User) (auth.User, error) {
 	return c.GetUser(id, "", "")
 }
 
+// SetUserRole updates only the user_role_id for a user. Used by the
+// Authentik proxy auth path to sync IdP group -> role mappings.
+func (c *Core) SetUserRole(id, roleID int) error {
+	if _, err := c.q.UpdateUserRole.Exec(id, roleID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError,
+			c.i18n.Ts("globals.messages.errorUpdating", "name", "{globals.terms.user}", "error", pqErrMsg(err)))
+	}
+	return nil
+}
+
 // UpdateUserLogin updates a user's record post-login.
 func (c *Core) UpdateUserLogin(id int, avatar string) error {
 	if _, err := c.q.UpdateUserLogin.Exec(id, avatar); err != nil {

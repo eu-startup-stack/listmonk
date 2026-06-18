@@ -262,6 +262,7 @@ INSERT INTO settings (key, value) VALUES
     ('privacy.record_optin_ip', 'false'),
     ('security.captcha', '{"altcha": {"enabled": false, "complexity": 300000}, "hcaptcha": {"enabled": false, "key": "", "secret": ""}}'),
     ('security.oidc', '{"enabled": false, "provider_url": "", "provider_name": "", "client_id": "", "client_secret": "", "auto_create_users": false, "default_user_role_id": null, "default_list_role_id": null}'),
+    ('security.authentik', '{"enabled": false, "trusted_ips": [], "trusted_secret": "", "group_prefix": "listmonk"}'),
     ('security.trusted_urls', '[]'),
     ('upload.provider', '"filesystem"'),
     ('upload.max_file_size', '5000'),

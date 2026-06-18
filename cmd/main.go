@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"testing"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -44,6 +45,7 @@ type App struct {
 	emailMsgr  manager.Messenger
 	importer   *subimporter.Importer
 	auth       *auth.Auth
+	authentik  *Authentik
 	media      media.Store
 	bounce     *bounce.Manager
 	captcha    *captcha.Captcha
@@ -94,6 +96,15 @@ var (
 )
 
 func init() {
+	// Skip the heavy bootstrap (config, DB, embedded FS) when running under
+	// `go test` so that pure-logic unit tests in this package
+	// (e.g. cmd/authentik_test.go) can run without a real config or database.
+	// Production behavior is unchanged: `testing.Testing()` is true only when
+	// the current process was started by the Go test runner.
+	if testing.Testing() {
+		return
+	}
+
 	// Initialize commandline flags.
 	initFlags(ko)
 
@@ -221,6 +232,9 @@ func main() {
 		// Initialize the auth manager.
 		hasUsers, auth = initAuth(core, db.DB, ko)
 
+		// Initialize the Authentik proxy authenticator (inert when disabled).
+		authentik = NewAuthentik(cfg.Security.Authentik, core, lo)
+
 		// Initialize the webhook/POP3 bounce processor.
 		bounce *bounce.Manager
 
@@ -275,6 +289,7 @@ func main() {
 		emailMsgr:  emailMsgr,
 		importer:   importer,
 		auth:       auth,
+		authentik:  authentik,
 		media:      media,
 		bounce:     bounce,
 		captcha:    initCaptcha(),

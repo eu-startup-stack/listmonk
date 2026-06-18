@@ -27,25 +27,27 @@ type serverConfig struct {
 		DisableTracking    bool `json:"disable_tracking"`
 		IndividualTracking bool `json:"individual_tracking"`
 	} `json:"privacy"`
-	MediaProvider string          `json:"media_provider"`
-	Messengers    []string        `json:"messengers"`
-	Langs         []i18nLang      `json:"langs"`
-	Lang          string          `json:"lang"`
-	Permissions   json.RawMessage `json:"permissions"`
-	Update        *AppUpdate      `json:"update"`
-	NeedsRestart  bool            `json:"needs_restart"`
-	HasLegacyUser bool            `json:"has_legacy_user"`
-	Version       string          `json:"version"`
+	MediaProvider    string          `json:"media_provider"`
+	Messengers       []string        `json:"messengers"`
+	Langs            []i18nLang      `json:"langs"`
+	Lang             string          `json:"lang"`
+	Permissions      json.RawMessage `json:"permissions"`
+	Update           *AppUpdate      `json:"update"`
+	NeedsRestart     bool            `json:"needs_restart"`
+	HasLegacyUser    bool            `json:"has_legacy_user"`
+	AuthentikEnabled bool            `json:"authentik_enabled"`
+	Version          string          `json:"version"`
 }
 
 // GetServerConfig returns general server config.
 func (a *App) GetServerConfig(c echo.Context) error {
 	out := serverConfig{
-		RootURL:       a.urlCfg.RootURL,
-		FromEmail:     a.cfg.FromEmail,
-		Lang:          a.cfg.Lang,
-		Permissions:   a.cfg.PermissionsRaw,
-		HasLegacyUser: a.cfg.HasLegacyUser,
+		RootURL:          a.urlCfg.RootURL,
+		FromEmail:        a.cfg.FromEmail,
+		Lang:             a.cfg.Lang,
+		Permissions:      a.cfg.PermissionsRaw,
+		HasLegacyUser:    a.cfg.HasLegacyUser,
+		AuthentikEnabled: a.authentik.Enabled(),
 		Privacy: struct {
 			DisableTracking    bool `json:"disable_tracking"`
 			IndividualTracking bool `json:"individual_tracking"`
